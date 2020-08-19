@@ -3,17 +3,20 @@ package com.woailqw.elasticsearch.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.TimeValue;
 
 /**
  * Easy rest high level client.
@@ -42,6 +45,11 @@ public final class EasyRestHighLevelClient implements Closeable {
      * Type.
      */
     private static final String TYPE = "type";
+
+    /**
+     * Default timeout.
+     */
+    private static final String DEFAULT_TIMEOUT = "1m";
 
     /**
      * Traditional database data type mapping elasticsearch data type.
@@ -133,7 +141,7 @@ public final class EasyRestHighLevelClient implements Closeable {
         Map<String, Object> jsonMap = new HashMap<>(1);
         jsonMap.put(DEFAULT_TYPE, this.incrementProperties(fieldMapping));
         request.mapping(DEFAULT_TYPE, jsonMap);
-        request.timeout(TimeValue.timeValueMinutes(1));
+        request.timeout(DEFAULT_TIMEOUT);
 
         AcknowledgedResponse response =
             this.client.indices().create(request, RequestOptions.DEFAULT);
@@ -141,6 +149,26 @@ public final class EasyRestHighLevelClient implements Closeable {
         return indexName;
     }
 
+    /**
+     * Dump data to elasticsearch.
+     *
+     * @param indexName The index name of elasticsearch.
+     * @param dataList Data list.
+     * @return Bulk Response.
+     * @throws IOException If something goes wrong.
+     */
+    public BulkResponse dump(final String indexName,
+        final List<Map<String, String>> dataList) throws IOException {
+
+        BulkRequest request = new BulkRequest();
+        request.timeout(DEFAULT_TIMEOUT);
+        dataList.forEach(
+            data -> request.add(
+                    new IndexRequest(indexName, DEFAULT_TYPE).source(data)
+                )
+        );
+        return this.client.bulk(request, RequestOptions.DEFAULT);
+    }
 
     /**
      * Create elasticsearch properties.

@@ -1,6 +1,12 @@
 package com.woailqw.elasticsearch.client;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,12 +21,31 @@ public final class EasyRestHighLevelClientTest {
     /**
      * Test elasticsearch connection.
      */
-    //@Test
+    @Test
     public void restHighClientConnectionTest() {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
-            new HttpHost("Elasticsearch IP", 9200, "http")
+            new HttpHost("192.168.101.17", 9200, "http")
         );
 
         Assert.assertNotNull(client.getInternalClient());
+    }
+
+    /**
+     * Test dump.
+     *
+     * @throws IOException If something goes wrong.
+     */
+    @Test
+    public void dumpTest() throws IOException {
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+        List<Map<String, String>> list = new ArrayList<>(1);
+        Map<String, String> dataOne = new HashMap<>(1);
+        dataOne.put("name", "jackPan");
+        list.add(dataOne);
+        BulkResponse response = client.dump("jack_pan_test", list);
+
+        Assert.assertFalse(response.hasFailures());
     }
 }
