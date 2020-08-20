@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,6 +30,22 @@ public final class EasyRestHighLevelClientTest {
         );
 
         Assert.assertNotNull(client.getInternalClient());
+    }
+
+    /**
+     * Test create index method and delete index method.
+     * @throws IOException If something goes wrong.
+     */
+    @Test
+    public void createAndDeleteIndexTest() throws IOException {
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+        CreateIndexResponse response = client.createIndex("jack_create");
+        Assert.assertTrue(response.isAcknowledged());
+        AcknowledgedResponse deleteResponse =
+            client.deleteIndex("jack_create");
+        Assert.assertTrue(deleteResponse.isAcknowledged());
     }
 
     /**

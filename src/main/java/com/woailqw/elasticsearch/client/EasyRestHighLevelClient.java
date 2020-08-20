@@ -9,6 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -168,6 +170,42 @@ public final class EasyRestHighLevelClient implements Closeable {
                 )
         );
         return this.client.bulk(request, RequestOptions.DEFAULT);
+    }
+
+    /**
+     * Create index with a certain name.
+     *
+     * @param indexName The index name.
+     * @return Create response.
+     * @throws IOException If something goes wrong.
+     */
+    public CreateIndexResponse createIndex(final String indexName)
+        throws IOException {
+
+        CreateIndexRequest request = new CreateIndexRequest(indexName);
+        request.settings(Settings.builder()
+            .put("index.number_of_shards", 3)
+            .put("index.number_of_replicas", 2)
+        );
+        request.timeout(DEFAULT_TIMEOUT);
+        return this.client.indices().create(request, RequestOptions.DEFAULT);
+
+    }
+
+    /**
+     * Delete index with a certain name.
+     *
+     * @param indexName The index name.
+     * @return Delete response.
+     * @throws IOException If something goes wrong.
+     */
+    public AcknowledgedResponse deleteIndex(final String indexName)
+        throws IOException {
+
+        DeleteIndexRequest request = new DeleteIndexRequest(indexName);
+        request.timeout(DEFAULT_TIMEOUT);
+        return this.client.indices().delete(request, RequestOptions.DEFAULT);
+
     }
 
     /**
