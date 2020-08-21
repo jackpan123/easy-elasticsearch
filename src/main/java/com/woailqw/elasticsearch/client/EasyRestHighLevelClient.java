@@ -1,8 +1,10 @@
 package com.woailqw.elasticsearch.client;
 
+import com.alibaba.fastjson.JSONObject;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,11 +16,17 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 /**
  * Easy rest high level client.
@@ -52,6 +60,21 @@ public final class EasyRestHighLevelClient implements Closeable {
      * Default timeout.
      */
     private static final String DEFAULT_TIMEOUT = "1m";
+
+    /**
+     * Query string search format.
+     */
+    private static final String QUERY_STRING_FORMAT = "*%s*";
+
+    /**
+     * Total number field.
+     */
+    private static final String TOTAL_HITS = "totalHits";
+
+    /**
+     * Data list field.
+     */
+    private static final String DATA_LIST = "dataList";
 
     /**
      * Traditional database data type mapping elasticsearch data type.
@@ -206,6 +229,44 @@ public final class EasyRestHighLevelClient implements Closeable {
         request.timeout(DEFAULT_TIMEOUT);
         return this.client.indices().delete(request, RequestOptions.DEFAULT);
 
+    }
+
+    /**
+     * The comprehensive search for index list.
+     *
+     * @param keyword Keyword.
+     * @param indexList The index list.
+     * @return Json format data.
+     * @throws IOException If something goes wrong.
+     */
+    public JSONObject comprehensiveSearch(final String keyword,
+        final List<String> indexList) throws IOException {
+
+        JSONObject result = new JSONObject(new HashMap<>(indexList.size()));
+        for (final String indexName : indexList) {
+            SearchRequest searchRequest = new SearchRequest(indexName);
+            SearchSourceBuilder builder = new SearchSourceBuilder();
+            builder.query(QueryBuilders
+                .queryStringQuery(String
+                    .format(QUERY_STRING_FORMAT, keyword)));
+
+            searchRequest.source(builder);
+            SearchResponse searchResponse =
+                this.client.search(searchRequest, RequestOptions.DEFAULT);
+            // Deal with response data.
+            SearchHits hits = searchResponse.getHits();
+            Map<String, Object> data = new HashMap<>(2);
+            List<Map<String, Object>> dataList = new LinkedList<>();
+            data.put(TOTAL_HITS, hits.getTotalHits());
+            data.put(DATA_LIST, dataList);
+            for (final SearchHit searchHit : hits.getHits()) {
+                dataList.add(searchHit.getSourceAsMap());
+            }
+
+            result.put(indexName, data);
+        }
+
+        return result;
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.woailqw.elasticsearch.client;
 
+import com.alibaba.fastjson.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,5 +66,28 @@ public final class EasyRestHighLevelClientTest {
         BulkResponse response = client.dump("jack_pan_test", list);
 
         Assert.assertFalse(response.hasFailures());
+    }
+
+    /**
+     * Comprehensive test.
+     *
+     * @throws IOException If something goes wrong.
+     */
+    @Test
+    public void comprehensiveTest() throws IOException {
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+
+        List<String> indexList = new ArrayList<>(1);
+        indexList.add("jack_pan_test");
+        JSONObject result = client.comprehensiveSearch("jack", indexList);
+        Assert.assertNotNull(result);
+        Map<String, Object> indexData =
+            (Map<String, Object>)result.get("jack_pan_test");
+        Assert.assertEquals(2, indexData.size());
+        List<Map<String, Object>> dataList =
+            (List<Map<String, Object>>)indexData.get("dataList");
+        Assert.assertTrue(dataList.size() > 0);
     }
 }
