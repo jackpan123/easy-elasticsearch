@@ -90,4 +90,23 @@ public final class EasyRestHighLevelClientTest {
             (List<Map<String, Object>>)indexData.get("dataList");
         Assert.assertTrue(dataList.size() > 0);
     }
+
+    /**
+     * Comprehensive page search test.
+     *
+     * @throws IOException If something goes wrong.
+     */
+    @Test
+    public void comprehensivePageSearchTest() throws IOException {
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+
+        JSONObject result = client
+            .comprehensiveSearch("jack", "jack_pan_test", 2, 10);
+        Assert.assertNotNull(result);
+        List<Map<String, Object>> dataList =
+            (List<Map<String, Object>>)result.get("dataList");
+        Assert.assertTrue(dataList.size() > 0);
+    }
 }

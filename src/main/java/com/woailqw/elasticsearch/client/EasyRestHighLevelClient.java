@@ -16,14 +16,18 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -81,6 +85,12 @@ public final class EasyRestHighLevelClient implements Closeable {
      */
     private static final Map<String, Map<String, String>> DATA_TYPE_MAPPING =
         new ConcurrentHashMap<>(7);
+
+    /**
+     * Default scroll setting.
+     */
+    private static final Scroll DEFAULT_SCROLL =
+        new Scroll(TimeValue.timeValueMinutes(1L));
 
     /**
      * Data type initialization.
@@ -167,9 +177,7 @@ public final class EasyRestHighLevelClient implements Closeable {
         jsonMap.put(DEFAULT_TYPE, this.incrementProperties(fieldMapping));
         request.mapping(DEFAULT_TYPE, jsonMap);
         request.timeout(DEFAULT_TIMEOUT);
-
-        AcknowledgedResponse response =
-            this.client.indices().create(request, RequestOptions.DEFAULT);
+        this.client.indices().create(request, RequestOptions.DEFAULT);
 
         return indexName;
     }
@@ -254,19 +262,106 @@ public final class EasyRestHighLevelClient implements Closeable {
             SearchResponse searchResponse =
                 this.client.search(searchRequest, RequestOptions.DEFAULT);
             // Deal with response data.
-            SearchHits hits = searchResponse.getHits();
-            Map<String, Object> data = new HashMap<>(2);
-            List<Map<String, Object>> dataList = new LinkedList<>();
-            data.put(TOTAL_HITS, hits.getTotalHits());
-            data.put(DATA_LIST, dataList);
-            for (final SearchHit searchHit : hits.getHits()) {
-                dataList.add(searchHit.getSourceAsMap());
-            }
-
-            result.put(indexName, data);
+            result.put(indexName,
+                this.extraSearchHits(searchResponse.getHits()));
         }
 
         return result;
+    }
+
+    /**
+     * The comprehensive page search for single index.
+     *
+     * @param keyword The keyword.
+     * @param indexName The index name.
+     * @param pageNo The page number.
+     * @param pageSize The page size.
+     * @return Single index page search result.
+     * @throws IOException If something goes wrong.
+     */
+    public JSONObject comprehensiveSearch(final String keyword,
+        final String indexName, final Integer pageNo, final Integer pageSize)
+        throws IOException {
+
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(indexName);
+        searchRequest.scroll(DEFAULT_SCROLL);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders
+            .queryStringQuery(String
+                .format(QUERY_STRING_FORMAT, keyword)));
+        searchSourceBuilder.size(pageSize);
+        searchRequest.source(searchSourceBuilder);
+
+        SearchHits searchHits = this.scrollSearch(searchRequest, pageNo);
+        return this.extraSearchHits(searchHits);
+    }
+
+    /**
+     * Extra search hits data.
+     *
+     * @param searchHits Search result.
+     * @return Extra result.
+     */
+    private JSONObject extraSearchHits(final SearchHits searchHits) {
+        JSONObject result = new JSONObject(new HashMap<>(2));
+        List<Map<String, Object>> dataList = new LinkedList<>();
+        result.put(TOTAL_HITS, searchHits.getTotalHits());
+        result.put(DATA_LIST, dataList);
+        for (final SearchHit searchHit : searchHits.getHits()) {
+            dataList.add(searchHit.getSourceAsMap());
+        }
+
+        return result;
+    }
+
+    /**
+     * Use scroll search.
+     *
+     * @param request The search request.
+     * @param pageNo The page number.
+     * @return The search result.
+     * @throws IOException If something goes wrong.
+     */
+    public SearchHits scrollSearch(final SearchRequest request,
+        final Integer pageNo) throws IOException {
+        // execute search
+        SearchResponse searchResponse =
+            this.client.search(request, RequestOptions.DEFAULT);
+        String scrollId = searchResponse.getScrollId();
+        SearchHits searchHits = searchResponse.getHits();
+
+        // scroll search
+        if (searchHits.getHits() != null && searchHits.getHits().length > 0) {
+            int i= 1;
+            while (i < pageNo) {
+                SearchScrollRequest scrollRequest =
+                    new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(DEFAULT_SCROLL);
+                searchResponse =
+                    this.client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits();
+                i++;
+            }
+        }
+
+        // clear scroll session
+        this.clearScrollSession(scrollId);
+
+        return searchHits;
+    }
+    /**
+     * Clear scroll id.
+     *
+     * @param scrollId The scroll search ID.
+     * @throws IOException If something goes wrong.
+     */
+    private void clearScrollSession(final String scrollId) throws IOException {
+        // clear scroll session
+        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+        clearScrollRequest.addScrollId(scrollId);
+        this.client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
     }
 
     /**
