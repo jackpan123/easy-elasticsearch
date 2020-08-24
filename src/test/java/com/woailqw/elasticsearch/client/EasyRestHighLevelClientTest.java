@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,7 +88,7 @@ public final class EasyRestHighLevelClientTest {
             (Map<String, Object>)result.get("jack_pan_test");
         Assert.assertEquals(2, indexData.size());
         List<Map<String, Object>> dataList =
-            (List<Map<String, Object>>)indexData.get("dataList");
+            (List<Map<String, Object>>)indexData.get("singleIndexData");
         Assert.assertTrue(dataList.size() > 0);
     }
 
@@ -106,7 +107,24 @@ public final class EasyRestHighLevelClientTest {
             .comprehensiveSearch("jack", "jack_pan_test", 2, 10);
         Assert.assertNotNull(result);
         List<Map<String, Object>> dataList =
-            (List<Map<String, Object>>)result.get("dataList");
+            (List<Map<String, Object>>)result.get("singleIndexData");
         Assert.assertTrue(dataList.size() > 0);
+    }
+
+    /**
+     * Get document test.
+     *
+     * @throws IOException If something goes wrong.
+     */
+    @Test
+    public void getDocumentTest() throws IOException {
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+
+        GetResponse response = client.getDocument("jack_pan_test", "1");
+        Map<String, Object> sourceAsMap = response.getSourceAsMap();
+        Assert.assertNotNull(sourceAsMap);
+        Assert.assertTrue("jackPan".equals(sourceAsMap.get("full_name")));
     }
 }

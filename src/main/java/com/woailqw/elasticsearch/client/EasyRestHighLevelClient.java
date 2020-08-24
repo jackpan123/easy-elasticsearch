@@ -15,6 +15,8 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchRequest;
@@ -73,12 +75,12 @@ public final class EasyRestHighLevelClient implements Closeable {
     /**
      * Total number field.
      */
-    private static final String TOTAL_HITS = "totalHits";
+    public static final String SINGLE_INDEX_TOTAL = "singleIndexTotal";
 
     /**
      * Data list field.
      */
-    private static final String DATA_LIST = "dataList";
+    public static final String SINGLE_INDEX_DATA = "singleIndexData";
 
     /**
      * Traditional database data type mapping elasticsearch data type.
@@ -298,6 +300,23 @@ public final class EasyRestHighLevelClient implements Closeable {
     }
 
     /**
+     * Get document detail by id.
+     *
+     * @param indexName The index name.
+     * @param docId Document id
+     * @throws IOException If something goes wrong.
+     * @return Get response.
+     */
+    public GetResponse getDocument(final String indexName, final String docId)
+        throws IOException {
+
+        GetRequest request = new GetRequest(indexName, DEFAULT_TYPE, docId);
+        GetResponse getResponse = this.client
+            .get(request, RequestOptions.DEFAULT);
+        return getResponse;
+    }
+
+    /**
      * Extra search hits data.
      *
      * @param searchHits Search result.
@@ -306,8 +325,8 @@ public final class EasyRestHighLevelClient implements Closeable {
     private JSONObject extraSearchHits(final SearchHits searchHits) {
         JSONObject result = new JSONObject(new HashMap<>(2));
         List<Map<String, Object>> dataList = new LinkedList<>();
-        result.put(TOTAL_HITS, searchHits.getTotalHits());
-        result.put(DATA_LIST, dataList);
+        result.put(SINGLE_INDEX_TOTAL, searchHits.getTotalHits());
+        result.put(SINGLE_INDEX_DATA, dataList);
         for (final SearchHit searchHit : searchHits.getHits()) {
             dataList.add(searchHit.getSourceAsMap());
         }
