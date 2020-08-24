@@ -28,6 +28,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
@@ -256,9 +257,7 @@ public final class EasyRestHighLevelClient implements Closeable {
         for (final String indexName : indexList) {
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder builder = new SearchSourceBuilder();
-            builder.query(QueryBuilders
-                .queryStringQuery(String
-                    .format(QUERY_STRING_FORMAT, keyword)));
+            builder.query(this.crateQuery(keyword));
 
             searchRequest.source(builder);
             SearchResponse searchResponse =
@@ -289,14 +288,27 @@ public final class EasyRestHighLevelClient implements Closeable {
         searchRequest.indices(indexName);
         searchRequest.scroll(DEFAULT_SCROLL);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders
-            .queryStringQuery(String
-                .format(QUERY_STRING_FORMAT, keyword)));
+        searchSourceBuilder.query(this.crateQuery(keyword));
         searchSourceBuilder.size(pageSize);
         searchRequest.source(searchSourceBuilder);
 
         SearchHits searchHits = this.scrollSearch(searchRequest, pageNo);
         return this.extraSearchHits(searchHits);
+    }
+
+    /**
+     * Generate query statements based on keywords.
+     *
+     * @param keyword The keyword
+     * @return QueryBuilder
+     */
+    private QueryBuilder crateQuery(final String keyword) {
+        if (keyword == null || "".equals(keyword)) {
+            return QueryBuilders.matchAllQuery();
+        }
+        return QueryBuilders
+            .queryStringQuery(String
+                .format(QUERY_STRING_FORMAT, keyword));
     }
 
     /**
