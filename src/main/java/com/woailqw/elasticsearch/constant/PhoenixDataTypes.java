@@ -72,7 +72,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public boolean validateNumeric(String fieldType) {
+    public static boolean validateNumeric(String fieldType) {
         return NUMERIC_TYPE.contains(fieldType);
     }
 
@@ -82,7 +82,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public boolean validateDate(String fieldType) {
+    public static boolean validateDate(String fieldType) {
         return DATE_TYPE.contains(fieldType);
     }
 
@@ -92,7 +92,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public boolean validateString(String fieldType) {
+    public static boolean validateString(String fieldType) {
         return STRING_TYPE.contains(fieldType);
     }
 }

@@ -1,8 +1,16 @@
 package com.woailqw.elasticsearch.client;
 
+import static com.woailqw.elasticsearch.constant.MatchMethod.*;
+
 import com.alibaba.fastjson.JSONObject;
+import com.woailqw.elasticsearch.constant.PhoenixDataTypes;
+import com.woailqw.elasticsearch.entity.AdvantageSearchCondition;
+import com.woailqw.elasticsearch.entity.SearchField;
 import java.io.Closeable;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +18,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.HttpHost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -23,13 +33,16 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -121,6 +134,11 @@ public final class EasyRestHighLevelClient implements Closeable {
             "DOUBLE", elasticsearchDataTypeFormatter("double")
         );
     }
+
+    /**
+     * Date formatter.
+     */
+    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat();
 
     /**
      * Traditional database data type convert to elasticsearch
@@ -297,18 +315,90 @@ public final class EasyRestHighLevelClient implements Closeable {
     }
 
     /**
+     * Advantage search.
+     * @param condition The user selected condition.
+     * @return Result.
+     */
+    public JSONObject advancedSearch(AdvantageSearchCondition condition)
+        throws IOException, ParseException {
+
+        List<QueryBuilder> executeQueryList = new ArrayList<>();
+        for (SearchField field : condition.getSearchMethod()) {
+            if (PhoenixDataTypes.validateDate(field.getTypeName())) {
+                // create query
+                executeQueryList.add(createDateQuery(field));
+            } else if (PhoenixDataTypes.validateNumeric(field.getTypeName())) {
+                // create query
+            } else if (PhoenixDataTypes.validateString(field.getTypeName())) {
+                // create query
+            } else {
+                return null;
+            }
+
+        }
+
+
+        return new JSONObject();
+    }
+
+
+    /**
+     * Create date query.
+     *
+     * @param field Search field.
+     * @return Date query.
+     * @throws ParseException If somethings goes wrong.
+     */
+    private QueryBuilder createDateQuery(SearchField field) throws ParseException {
+
+        QueryBuilder simpleQuery = null;
+        RangeQueryBuilder dateBuilder = QueryBuilders.rangeQuery(field.getFieldName());
+
+        long beginTime = DATE_FORMAT.parse(field.getBeginTime()).getTime();
+        long endTime = 0;
+        if (field.getEndTime() != null) {
+            endTime = DATE_FORMAT.parse(field.getEndTime()).getTime();
+        }
+
+        String method = field.getMethod();
+
+        if (EQUALS.equals(method)) {
+            simpleQuery = dateBuilder.gte(beginTime).lte(beginTime);
+        } else if (NOT_EQUALS.equals(method)) {
+            simpleQuery= dateBuilder.gt(beginTime).lt(beginTime);
+        } else if (GT.equals(method)) {
+            simpleQuery = dateBuilder.gt(beginTime);
+        } else if (LT.equals(method)) {
+            simpleQuery = dateBuilder.lt(beginTime);
+        } else if (GTE.equals(method)) {
+            simpleQuery = dateBuilder.gte(beginTime);
+        } else if (LTE.equals(method)) {
+            simpleQuery = dateBuilder.lte(beginTime);
+        } else if (RANGE.equals(method)) {
+            simpleQuery = dateBuilder.gte(beginTime).lte(endTime);
+        }
+
+        return simpleQuery;
+    }
+
+
+    /**
      * Generate query statements based on keywords.
      *
      * @param keyword The keyword
      * @return QueryBuilder
      */
     private QueryBuilder crateQuery(final String keyword) {
+        QueryBuilder query = null;
         if (keyword == null || "".equals(keyword)) {
-            return QueryBuilders.matchAllQuery();
+            query = QueryBuilders.matchAllQuery();
+        } else {
+            query = QueryBuilders
+                .queryStringQuery(String
+                    .format(QUERY_STRING_FORMAT, keyword));
         }
-        return QueryBuilders
-            .queryStringQuery(String
-                .format(QUERY_STRING_FORMAT, keyword));
+
+        return query;
     }
 
     /**
