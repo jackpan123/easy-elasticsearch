@@ -140,25 +140,25 @@ public final class EasyRestHighLevelClientTest {
     @Test
     public void advancedSearchTest() throws IOException, ParseException {
         AdvancedSearchCondition condition = new AdvancedSearchCondition();
-        condition.setIndexName("quality_phoenixquailtytable_czhiliangjiance"
-            + "-weiyi_e30afb19cc4648dc8ee0278c80eec92f");
+        condition.setIndexName("hfkajshdgkjhasdghoaidshgoudsajjaogiodshgoa_728"
+            + "732_aa_2d1f115fc51741fb8c6afc77b86ccd3d");
 
         List<SearchField> fieldList = new ArrayList<>();
         SearchField dateField = new SearchField();
-        dateField.setFieldName("LDH_CREATEDATE");
-        dateField.setMethod("=");
-        dateField.setTypeName("DATE");
-        dateField.setBeginTime("2020-08-11 14:56:57");
+        dateField.setFieldName("AA_PK");
+        dateField.setMethod(">");
+        dateField.setTypeName("BIGINT");
+        dateField.setValue("3");
 
         fieldList.add(dateField);
 
-        SearchField numField = new SearchField();
-        numField.setFieldName("LDH_WORKFLOWID");
-        numField.setMethod("=");
-        numField.setTypeName("INTEGER");
-        numField.setValue("213309698374365184");
-
-        fieldList.add(numField);
+//        SearchField numField = new SearchField();
+//        numField.setFieldName("LDH_WORKFLOWID");
+//        numField.setMethod("=");
+//        numField.setTypeName("INTEGER");
+//        numField.setValue("213309698374365184");
+//
+//        fieldList.add(numField);
 
         condition.setSearchMethod(fieldList);
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
