@@ -9,6 +9,12 @@ package com.woailqw.elasticsearch.constant;
 public final class MatchMethod {
 
     /**
+     * Hide constructor.
+     */
+    private MatchMethod() {
+    }
+
+    /**
      * Equals.
      */
     public static final String EQUALS = "=";

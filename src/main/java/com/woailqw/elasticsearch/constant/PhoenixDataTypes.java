@@ -14,24 +14,30 @@ public final class PhoenixDataTypes {
     /**
      * The numeric type set.
      */
-    private final static Set<String> NUMERIC_TYPE = new HashSet<>(12);
+    private static final Set<String> NUMERIC_TYPE = new HashSet<>(12);
 
     /**
      * The date type set.
      */
-    private final static Set<String> DATE_TYPE = new HashSet<>(6);
+    private static final Set<String> DATE_TYPE = new HashSet<>(6);
 
     /**
      * The string type set.
      */
-    private final static Set<String> STRING_TYPE = new HashSet<>(2);
+    private static final Set<String> STRING_TYPE = new HashSet<>(2);
 
+    /**
+     * Init function.
+     */
     static {
         initNumericType();
         initDateType();
         initStringType();
     }
 
+    /**
+     * Init numeric type.
+     */
     private static void initNumericType() {
         NUMERIC_TYPE.add("INTEGER");
         NUMERIC_TYPE.add("UNSIGNED_INT");
@@ -47,6 +53,9 @@ public final class PhoenixDataTypes {
         NUMERIC_TYPE.add("DECIMAL");
     }
 
+    /**
+     * Init date type.
+     */
     private static void initDateType() {
         DATE_TYPE.add("TIME");
         DATE_TYPE.add("DATE");
@@ -56,6 +65,9 @@ public final class PhoenixDataTypes {
         DATE_TYPE.add("UNSIGNED_TIMESTAMP");
     }
 
+    /**
+     * Init string type.
+     */
     private static void initStringType() {
         STRING_TYPE.add("VARCHAR");
         STRING_TYPE.add("CHAR");
@@ -72,7 +84,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public static boolean validateNumeric(String fieldType) {
+    public static boolean validateNumeric(final String fieldType) {
         return NUMERIC_TYPE.contains(fieldType);
     }
 
@@ -82,7 +94,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public static boolean validateDate(String fieldType) {
+    public static boolean validateDate(final String fieldType) {
         return DATE_TYPE.contains(fieldType);
     }
 
@@ -92,7 +104,7 @@ public final class PhoenixDataTypes {
      * @param fieldType The field type.
      * @return Boolean result.
      */
-    public static boolean validateString(String fieldType) {
+    public static boolean validateString(final String fieldType) {
         return STRING_TYPE.contains(fieldType);
     }
 }

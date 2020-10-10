@@ -1,7 +1,10 @@
 package com.woailqw.elasticsearch.client;
 
 import com.alibaba.fastjson.JSONObject;
+import com.woailqw.elasticsearch.entity.AdvancedSearchCondition;
+import com.woailqw.elasticsearch.entity.SearchField;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,5 +129,44 @@ public final class EasyRestHighLevelClientTest {
         Map<String, Object> sourceAsMap = response.getSourceAsMap();
         Assert.assertNotNull(sourceAsMap);
         Assert.assertTrue("jackPan".equals(sourceAsMap.get("full_name")));
+    }
+
+    /**
+     * Advanced search test.
+     *
+     * @throws IOException If something goes wrong.
+     * @throws ParseException If something goes wrong.
+     */
+    @Test
+    public void advancedSearchTest() throws IOException, ParseException {
+        AdvancedSearchCondition condition = new AdvancedSearchCondition();
+        condition.setIndexName("quality_phoenixquailtytable_czhiliangjiance"
+            + "-weiyi_e30afb19cc4648dc8ee0278c80eec92f");
+
+        List<SearchField> fieldList = new ArrayList<>();
+        SearchField dateField = new SearchField();
+        dateField.setFieldName("LDH_CREATEDATE");
+        dateField.setMethod("=");
+        dateField.setTypeName("DATE");
+        dateField.setBeginTime("2020-08-11 14:56:57");
+
+        fieldList.add(dateField);
+
+        SearchField numField = new SearchField();
+        numField.setFieldName("LDH_WORKFLOWID");
+        numField.setMethod("=");
+        numField.setTypeName("INTEGER");
+        numField.setValue("213309698374365184");
+
+        fieldList.add(numField);
+
+        condition.setSearchMethod(fieldList);
+        EasyRestHighLevelClient client = new EasyRestHighLevelClient(
+            new HttpHost("192.168.101.17", 9200, "http")
+        );
+
+        JSONObject search = client.advancedSearch(condition, 1, 10);
+        Assert.assertNotNull(search);
+
     }
 }

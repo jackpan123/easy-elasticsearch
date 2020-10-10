@@ -4,13 +4,12 @@ import static com.woailqw.elasticsearch.constant.MatchMethod.*;
 
 import com.alibaba.fastjson.JSONObject;
 import com.woailqw.elasticsearch.constant.PhoenixDataTypes;
-import com.woailqw.elasticsearch.entity.AdvantageSearchCondition;
+import com.woailqw.elasticsearch.entity.AdvancedSearchCondition;
 import com.woailqw.elasticsearch.entity.SearchField;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,8 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.HttpHost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -33,13 +30,12 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -138,7 +134,8 @@ public final class EasyRestHighLevelClient implements Closeable {
     /**
      * Date formatter.
      */
-    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat();
+    private static final SimpleDateFormat DATE_FORMAT =
+        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Traditional database data type convert to elasticsearch
@@ -315,32 +312,74 @@ public final class EasyRestHighLevelClient implements Closeable {
     }
 
     /**
-     * Advantage search.
+     * Advanced search.
+     *
      * @param condition The user selected condition.
-     * @return Result.
+     * @param pageNo The page number.
+     * @param pageSize The page size.
+     * @return Result or return null if condition doesn't meet specifications.
+     * @throws IOException If something goes wrong.
+     * @throws ParseException If something goes wrong.
      */
-    public JSONObject advancedSearch(AdvantageSearchCondition condition)
+    public JSONObject advancedSearch(final AdvancedSearchCondition condition,
+        final Integer pageNo, final Integer pageSize)
         throws IOException, ParseException {
 
-        List<QueryBuilder> executeQueryList = new ArrayList<>();
-        for (SearchField field : condition.getSearchMethod()) {
-            if (PhoenixDataTypes.validateDate(field.getTypeName())) {
-                // create query
-                executeQueryList.add(createDateQuery(field));
-            } else if (PhoenixDataTypes.validateNumeric(field.getTypeName())) {
-                // create query
-            } else if (PhoenixDataTypes.validateString(field.getTypeName())) {
-                // create query
-            } else {
-                return null;
+        // Create bool query.
+        BoolQueryBuilder advantageQuery = QueryBuilders.boolQuery();
+
+        // Extra condition.
+        for (final SearchField field : condition.getSearchMethod()) {
+            QueryBuilder singleQuery = this.crateQuery(field);
+
+            if (singleQuery != null) {
+                if (NOT_EQUALS.equals(field.getMethod())) {
+                    advantageQuery.mustNot().add(singleQuery);
+                } else {
+                    advantageQuery.must().add(singleQuery);
+                }
             }
 
         }
 
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(condition.getIndexName());
+        searchRequest.scroll(DEFAULT_SCROLL);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(advantageQuery);
+        System.out.println(advantageQuery.toString());
+        searchSourceBuilder.size(pageSize);
+        searchRequest.source(searchSourceBuilder);
 
-        return new JSONObject();
+        // Execute query.
+        SearchHits searchHits = this.scrollSearch(searchRequest, pageNo);
+        return this.extraSearchHits(searchHits);
     }
 
+    /**
+     * Create date query.
+     *
+     * @param field Search field.
+     * @return Query.
+     * @throws ParseException If something goes wrong.
+     */
+    private QueryBuilder crateQuery(final SearchField field)
+        throws ParseException {
+        QueryBuilder singleQuery = null;
+        String typeName = field.getTypeName().toUpperCase().trim();
+        if (PhoenixDataTypes.validateDate(typeName)) {
+            // Create date query.
+            singleQuery = this.createDateQuery(field);
+        } else if (PhoenixDataTypes.validateNumeric(typeName)) {
+            // Create numeric query.
+            singleQuery = this.createNumericQuery(field);
+        } else if (PhoenixDataTypes.validateString(typeName)) {
+            // Create string query.
+            singleQuery = this.createStringQuery(field);
+        }
+
+        return singleQuery;
+    }
 
     /**
      * Create date query.
@@ -349,23 +388,23 @@ public final class EasyRestHighLevelClient implements Closeable {
      * @return Date query.
      * @throws ParseException If somethings goes wrong.
      */
-    private QueryBuilder createDateQuery(SearchField field) throws ParseException {
+    private QueryBuilder createDateQuery(final SearchField field)
+        throws ParseException {
 
         QueryBuilder simpleQuery = null;
-        RangeQueryBuilder dateBuilder = QueryBuilders.rangeQuery(field.getFieldName());
+        RangeQueryBuilder dateBuilder =
+            QueryBuilders.rangeQuery(field.getFieldName());
 
         long beginTime = DATE_FORMAT.parse(field.getBeginTime()).getTime();
         long endTime = 0;
         if (field.getEndTime() != null) {
             endTime = DATE_FORMAT.parse(field.getEndTime()).getTime();
         }
-
         String method = field.getMethod();
 
-        if (EQUALS.equals(method)) {
+        // Build query.
+        if (EQUALS.equals(method) || NOT_EQUALS.equals(method)) {
             simpleQuery = dateBuilder.gte(beginTime).lte(beginTime);
-        } else if (NOT_EQUALS.equals(method)) {
-            simpleQuery= dateBuilder.gt(beginTime).lt(beginTime);
         } else if (GT.equals(method)) {
             simpleQuery = dateBuilder.gt(beginTime);
         } else if (LT.equals(method)) {
@@ -383,10 +422,64 @@ public final class EasyRestHighLevelClient implements Closeable {
 
 
     /**
+     * Create numeric query.
+     *
+     * @param field Search field.
+     * @return Search query.
+     */
+    private QueryBuilder createNumericQuery(final SearchField field) {
+
+        QueryBuilder simpleQuery = null;
+        String method = field.getMethod();
+        String fieldName = field.getFieldName();
+        String value = field.getValue();
+
+        // Build query.
+        if (EQUALS.equals(method) || NOT_EQUALS.equals(method)) {
+            simpleQuery = QueryBuilders.termQuery(fieldName, value);
+        } else if (GT.equals(method)) {
+            simpleQuery = QueryBuilders.rangeQuery(fieldName).gt(value);
+        } else if (LT.equals(method)) {
+            simpleQuery = QueryBuilders.rangeQuery(fieldName).lt(value);
+        } else if (GTE.equals(method)) {
+            simpleQuery = QueryBuilders.rangeQuery(fieldName).gte(value);
+        } else if (LTE.equals(method)) {
+            simpleQuery = QueryBuilders.rangeQuery(fieldName).lte(value);
+        }
+
+        return simpleQuery;
+
+    }
+
+    /**
+     * Create string query.
+     *
+     * @param field Search field.
+     * @return Query.
+     */
+    private QueryBuilder createStringQuery(final SearchField field) {
+
+        QueryBuilder simpleQuery = null;
+        String method = field.getMethod();
+        String fieldName = field.getFieldName();
+        String value = field.getValue();
+
+        // Build query.
+        if (EQUALS.equals(method) || NOT_EQUALS.equals(method)) {
+            simpleQuery = QueryBuilders.termQuery(fieldName, value);
+        } else if (CONTAINS.equals(method)) {
+            simpleQuery = QueryBuilders.matchPhraseQuery(fieldName, value);
+        }
+
+        return simpleQuery;
+    }
+
+
+    /**
      * Generate query statements based on keywords.
      *
-     * @param keyword The keyword
-     * @return QueryBuilder
+     * @param keyword The keyword.
+     * @return QueryBuilder.
      */
     private QueryBuilder crateQuery(final String keyword) {
         QueryBuilder query = null;

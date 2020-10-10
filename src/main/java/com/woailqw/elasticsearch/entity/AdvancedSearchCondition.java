@@ -8,7 +8,7 @@ import java.util.List;
  * @author Jack Pan
  * @version 1.00
  */
-public final class AdvantageSearchCondition {
+public final class AdvancedSearchCondition {
 
     /**
      * The index name.
