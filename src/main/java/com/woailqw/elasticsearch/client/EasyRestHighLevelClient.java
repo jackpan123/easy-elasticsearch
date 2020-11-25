@@ -347,7 +347,6 @@ public final class EasyRestHighLevelClient implements Closeable {
         searchRequest.scroll(DEFAULT_SCROLL);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(advantageQuery);
-        System.out.println(advantageQuery.toString());
         searchSourceBuilder.size(pageSize);
         searchRequest.source(searchSourceBuilder);
 
@@ -469,6 +468,8 @@ public final class EasyRestHighLevelClient implements Closeable {
             simpleQuery = QueryBuilders.termQuery(fieldName, value);
         } else if (CONTAINS.equals(method)) {
             simpleQuery = QueryBuilders.matchPhraseQuery(fieldName, value);
+        } else if (LIKE.equals(method)) {
+            simpleQuery = QueryBuilders.wildcardQuery(fieldName, "*" + value + "*");
         }
 
         return simpleQuery;

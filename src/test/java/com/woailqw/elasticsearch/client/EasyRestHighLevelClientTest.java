@@ -152,13 +152,13 @@ public final class EasyRestHighLevelClientTest {
 
         fieldList.add(dateField);
 
-//        SearchField numField = new SearchField();
-//        numField.setFieldName("LDH_WORKFLOWID");
-//        numField.setMethod("=");
-//        numField.setTypeName("INTEGER");
-//        numField.setValue("213309698374365184");
-//
-//        fieldList.add(numField);
+        SearchField numField = new SearchField();
+        numField.setFieldName("ID");
+        numField.setMethod("=");
+        numField.setTypeName("VARCHAR");
+        numField.setValue("444");
+
+        fieldList.add(numField);
 
         condition.setSearchMethod(fieldList);
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(

@@ -53,4 +53,9 @@ public final class MatchMethod {
      * Contains.
      */
     public static final String CONTAINS = "contains";
+
+    /**
+     * like.
+     */
+    public static final String LIKE = "like";
 }
