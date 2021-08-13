@@ -1,4 +1,4 @@
-package com.woailqw.elasticsearch.constant;
+package com.lczyfz.elasticsearch.constant;
 
 /**
  * The match method class.

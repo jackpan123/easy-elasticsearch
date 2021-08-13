@@ -1,8 +1,8 @@
-package com.woailqw.elasticsearch.client;
+package com.lczyfz.elasticsearch.client;
 
 import com.alibaba.fastjson.JSONObject;
-import com.woailqw.elasticsearch.entity.AdvancedSearchCondition;
-import com.woailqw.elasticsearch.entity.SearchField;
+import com.lczyfz.elasticsearch.entity.AdvancedSearchCondition;
+import com.lczyfz.elasticsearch.entity.SearchField;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;

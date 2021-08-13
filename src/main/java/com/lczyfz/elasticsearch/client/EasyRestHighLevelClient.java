@@ -1,11 +1,11 @@
-package com.woailqw.elasticsearch.client;
+package com.lczyfz.elasticsearch.client;
 
-import static com.woailqw.elasticsearch.constant.MatchMethod.*;
+import static com.lczyfz.elasticsearch.constant.MatchMethod.*;
 
 import com.alibaba.fastjson.JSONObject;
-import com.woailqw.elasticsearch.constant.PhoenixDataTypes;
-import com.woailqw.elasticsearch.entity.AdvancedSearchCondition;
-import com.woailqw.elasticsearch.entity.SearchField;
+import com.lczyfz.elasticsearch.constant.PhoenixDataTypes;
+import com.lczyfz.elasticsearch.entity.AdvancedSearchCondition;
+import com.lczyfz.elasticsearch.entity.SearchField;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.ParseException;

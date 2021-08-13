@@ -1,4 +1,4 @@
-package com.woailqw.elasticsearch.constant;
+package com.lczyfz.elasticsearch.constant;
 
 import java.util.HashSet;
 import java.util.Set;

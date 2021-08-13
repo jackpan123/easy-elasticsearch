@@ -1,4 +1,4 @@
-package com.woailqw.elasticsearch.entity;
+package com.lczyfz.elasticsearch.entity;
 
 import java.util.List;
 

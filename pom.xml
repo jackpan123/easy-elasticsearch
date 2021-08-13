@@ -64,23 +64,6 @@
                 <version>6.15</version>
               </dependency>
             </dependencies>
-            <executions>
-              <execution>
-                <id>validate</id>
-                <phase>validate</phase>
-                <configuration>
-                  <configLocation>checkstyle.xml</configLocation>
-                  <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                  <encoding>UTF-8</encoding>
-                  <consoleOutput>true</consoleOutput>
-                  <failsOnError>true</failsOnError>
-                  <linkXRef>false</linkXRef>
-                </configuration>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
@@ -202,54 +185,13 @@
             </executions>
           </plugin>
           <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>oss.sonatype.org</serverId>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <description>${project.version}</description>
-            </configuration>
-            <executions>
-              <execution>
-                <id>deploy-to-sonatype</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                  <goal>release</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-                <configuration>
-                  <gpgArguments>
-                    <arg>--pinentry-mode</arg>
-                    <arg>loopback</arg>
-                  </gpgArguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
             <version>3.1.1</version>
             <configuration>
               <archive>
                 <manifestEntries>
-                  <Automatic-Module-Name>com.woailqw.elasticsearch</Automatic-Module-Name>
+                  <Automatic-Module-Name>com.lczyfz.elasticsearch</Automatic-Module-Name>
                 </manifestEntries>
               </archive>
             </configuration>
@@ -258,14 +200,14 @@
       </build>
     </profile>
   </profiles>
-  <distributionManagement>
-    <repository>
-      <id>oss.sonatype.org</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <snapshotRepository>
-      <id>oss.sonatype.org</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
+<!--  <distributionManagement>-->
+<!--    <repository>-->
+<!--      <id>oss.sonatype.org</id>-->
+<!--      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+<!--    </repository>-->
+<!--    <snapshotRepository>-->
+<!--      <id>oss.sonatype.org</id>-->
+<!--      <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
+<!--    </snapshotRepository>-->
+<!--  </distributionManagement>-->
 </project>
