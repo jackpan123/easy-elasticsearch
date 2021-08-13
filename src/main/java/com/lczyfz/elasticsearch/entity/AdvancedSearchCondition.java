@@ -13,7 +13,7 @@ public final class AdvancedSearchCondition {
     /**
      * The index name.
      */
-    private String indexName;
+    private String[] indexName;
 
     /**
      * The search method.
@@ -25,7 +25,7 @@ public final class AdvancedSearchCondition {
      *
      * @return Value of indexName.
      */
-    public String getIndexName() {
+    public String[] getIndexName() {
         return this.indexName;
     }
 
@@ -34,7 +34,7 @@ public final class AdvancedSearchCondition {
      *
      * @param indexName Simple param.
      */
-    public void setIndexName(final String indexName) {
+    public void setIndexName(final String... indexName) {
         this.indexName = indexName;
     }
 
