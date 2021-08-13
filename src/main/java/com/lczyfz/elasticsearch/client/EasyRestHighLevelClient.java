@@ -10,6 +10,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +52,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
  * @version 1.00 2020-08-17
  */
 public final class EasyRestHighLevelClient implements Closeable {
+
+    public static final List<HttpHost> DEFAULT_HTTP_HOST_LIST = new ArrayList<>();
 
     /**
      * Internal client.
@@ -159,6 +162,15 @@ public final class EasyRestHighLevelClient implements Closeable {
      */
     public EasyRestHighLevelClient(final HttpHost... httpHosts) {
         this.client = new RestHighLevelClient(RestClient.builder(httpHosts));
+    }
+
+    /**
+     * Get default client.
+     *
+     * @return Easy rest high level client.
+     */
+    public static EasyRestHighLevelClient defaultClient() {
+        return new EasyRestHighLevelClient(DEFAULT_HTTP_HOST_LIST.toArray(new HttpHost[0]));
     }
 
     /**

@@ -28,7 +28,7 @@ public final class EasyRestHighLevelClientTest {
     /**
      * Test elasticsearch connection.
      */
-    @Test
+    //@Test
     public void restHighClientConnectionTest() {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -41,7 +41,7 @@ public final class EasyRestHighLevelClientTest {
      * Test create index method and delete index method.
      * @throws IOException If something goes wrong.
      */
-    @Test
+    //@Test
     public void createAndDeleteIndexTest() throws IOException {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -58,7 +58,7 @@ public final class EasyRestHighLevelClientTest {
      *
      * @throws IOException If something goes wrong.
      */
-    @Test
+    //@Test
     public void dumpTest() throws IOException {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -77,7 +77,7 @@ public final class EasyRestHighLevelClientTest {
      *
      * @throws IOException If something goes wrong.
      */
-    @Test
+    //@Test
     public void comprehensiveTest() throws IOException {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -100,7 +100,7 @@ public final class EasyRestHighLevelClientTest {
      *
      * @throws IOException If something goes wrong.
      */
-    @Test
+    //@Test
     public void comprehensivePageSearchTest() throws IOException {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -119,7 +119,7 @@ public final class EasyRestHighLevelClientTest {
      *
      * @throws IOException If something goes wrong.
      */
-    @Test
+    //@Test
     public void getDocumentTest() throws IOException {
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(
             new HttpHost("192.168.101.17", 9200, "http")
@@ -137,7 +137,7 @@ public final class EasyRestHighLevelClientTest {
      * @throws IOException If something goes wrong.
      * @throws ParseException If something goes wrong.
      */
-    @Test
+    //@Test
     public void advancedSearchTest() throws IOException, ParseException {
         AdvancedSearchCondition condition = new AdvancedSearchCondition();
         condition.setIndexName("hfkajshdgkjhasdghoaidshgoudsajjaogiodshgoa_728"
