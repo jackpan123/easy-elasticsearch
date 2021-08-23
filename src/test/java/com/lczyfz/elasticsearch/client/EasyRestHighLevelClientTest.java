@@ -1,6 +1,7 @@
 package com.lczyfz.elasticsearch.client;
 
 import com.alibaba.fastjson.JSONObject;
+import com.lczyfz.elasticsearch.constant.MatchMethod;
 import com.lczyfz.elasticsearch.entity.AdvancedSearchCondition;
 import com.lczyfz.elasticsearch.entity.SearchField;
 import java.io.IOException;
@@ -137,28 +138,35 @@ public final class EasyRestHighLevelClientTest {
      * @throws IOException If something goes wrong.
      * @throws ParseException If something goes wrong.
      */
-    //@Test
+    @Test
     public void advancedSearchTest() throws IOException, ParseException {
         AdvancedSearchCondition condition = new AdvancedSearchCondition();
-        condition.setIndexName("hfkajshdgkjhasdghoaidshgoudsajjaogiodshgoa_728"
-            + "732_aa_2d1f115fc51741fb8c6afc77b86ccd3d");
+        condition.setIndexName("test-apiagent-2021.08.13");
 
         List<SearchField> fieldList = new ArrayList<>();
-        SearchField dateField = new SearchField();
-        dateField.setFieldName("AA_PK");
-        dateField.setMethod(">");
-        dateField.setTypeName("BIGINT");
-        dateField.setValue("3");
+//        SearchField dateField = new SearchField();
+//        dateField.setFieldName("AA_PK");
+//        dateField.setMethod(">");
+//        dateField.setTypeName("BIGINT");
+//        dateField.setValue("3");
+//
+//        fieldList.add(dateField);
+//
+//        SearchField numField = new SearchField();
+//        numField.setFieldName("ID");
+//        numField.setMethod("=");
+//        numField.setTypeName("VARCHAR");
+//        numField.setValue("444");
 
-        fieldList.add(dateField);
+        SearchField field = new SearchField();
+        field.setFieldName("request");
+        field.setTypeName("VARCHAR");
+        field.setMethod(MatchMethod.EQUALS);
+//                field.setValue(moduleRuleUri);
+        field.setValue("/a/login");
+        fieldList.add(field);
 
-        SearchField numField = new SearchField();
-        numField.setFieldName("ID");
-        numField.setMethod("=");
-        numField.setTypeName("VARCHAR");
-        numField.setValue("444");
-
-        fieldList.add(numField);
+//        fieldList.add(numField);
 
         condition.setSearchMethod(fieldList);
         EasyRestHighLevelClient client = new EasyRestHighLevelClient(

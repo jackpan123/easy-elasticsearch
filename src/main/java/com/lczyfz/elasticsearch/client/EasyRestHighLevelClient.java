@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.lczyfz.elasticsearch.constant.PhoenixDataTypes;
 import com.lczyfz.elasticsearch.entity.AdvancedSearchCondition;
 import com.lczyfz.elasticsearch.entity.SearchField;
+import com.lczyfz.elasticsearch.entity.SortField;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.ParseException;
@@ -21,6 +22,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -44,6 +46,7 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 /**
  * Easy rest high level client.
@@ -181,12 +184,14 @@ public final class EasyRestHighLevelClient implements Closeable {
         return this.client;
     }
 
+
     /**
      * Traditional database mapping elasticsearch index.
      *
      * @param database Traditional database name.
      * @param table Table name.
-     * @param fieldMapping Field mapping.
+     * @param fieldMapping Field mapping key as field name
+     *                     and value as data type.
      * @return Index name.
      * @throws IOException If something goes wrong.
      */
@@ -196,21 +201,74 @@ public final class EasyRestHighLevelClient implements Closeable {
         String indexName = this.uniqueIndex(
             database.toLowerCase(), table.toLowerCase()
         );
+
+        return this.indexMapping(indexName, fieldMapping);
+    }
+
+
+    /**
+     * Traditional database mapping elasticsearch index.
+     *
+     * @param database Traditional database name.
+     * @param table Table name.
+     * @param fieldMapping Field mapping.
+     * @return Index name.
+     * @throws IOException If something goes wrong.
+     */
+//    public String indexMapping(final String database, final String table,
+//        final Map<String, String> fieldMapping) throws IOException {
+//
+//        String indexName = this.uniqueIndex(
+//            database.toLowerCase(), table.toLowerCase()
+//        );
+//        CreateIndexRequest request = new CreateIndexRequest(indexName);
+//
+//        request.settings(Settings.builder()
+//            .put("index.number_of_shards", 3)
+//            .put("index.number_of_replicas", 2)
+//        );
+//
+//        Map<String, Object> jsonMap = new HashMap<>(1);
+//        jsonMap.put(DEFAULT_TYPE, this.incrementProperties(fieldMapping));
+//        request.mapping(DEFAULT_TYPE, jsonMap);
+//        request.timeout(DEFAULT_TIMEOUT);
+//        this.client.indices().create(request, RequestOptions.DEFAULT);
+//
+//        return indexName;
+//    }
+
+    /**
+     * Traditional database mapping elasticsearch index.
+     *
+     * @param indexName
+     * @param fieldMapping Field mapping key as field name
+     *                     and value as data type.
+     * @throws IOException If something goes wrong.
+     * @return Index name.
+     */
+    private String indexMapping(final String indexName,
+        final Map<String, String> fieldMapping) throws IOException {
         CreateIndexRequest request = new CreateIndexRequest(indexName);
 
         request.settings(Settings.builder()
-            .put("index.number_of_shards", 3)
-            .put("index.number_of_replicas", 2)
+            .put("index.number_of_shards", 1)
+            .put("index.number_of_replicas", 1)
         );
 
         Map<String, Object> jsonMap = new HashMap<>(1);
         jsonMap.put(DEFAULT_TYPE, this.incrementProperties(fieldMapping));
+        // Set mapping
         request.mapping(DEFAULT_TYPE, jsonMap);
-        request.timeout(DEFAULT_TIMEOUT);
-        this.client.indices().create(request, RequestOptions.DEFAULT);
+        request.timeout(TimeValue.timeValueMinutes(1));
+        request.timeout(TimeValue.timeValueMinutes(1));
+        AcknowledgedResponse response =
+            this.client.indices().create(request, RequestOptions.DEFAULT);
+        if (response.isAcknowledged()) {
 
+        }
         return indexName;
     }
+
 
     /**
      * Dump data to elasticsearch.
@@ -232,6 +290,33 @@ public final class EasyRestHighLevelClient implements Closeable {
         );
         return this.client.bulk(request, RequestOptions.DEFAULT);
     }
+
+    /**
+     * Create log index name.
+     *
+     * @param indexName The index name.
+     * @return The index name.
+     */
+    public String createLogIndex(final String indexName) throws IOException {
+
+        Map<String, String> fieldMapping = new HashMap<>(13);
+        fieldMapping.put("id", "VARCHAR");
+        fieldMapping.put("systemSource", "VARCHAR");
+        fieldMapping.put("ip", "VARCHAR");
+        fieldMapping.put("logMessage", "VARCHAR");
+        fieldMapping.put("logLevel", "VARCHAR");
+        fieldMapping.put("instanceId", "VARCHAR");
+        fieldMapping.put("operatorId", "VARCHAR");
+        fieldMapping.put("createTime", "DATE");
+        fieldMapping.put("className", "VARCHAR");
+        fieldMapping.put("methodName", "VARCHAR");
+        fieldMapping.put("params", "VARCHAR");
+        fieldMapping.put("userId", "VARCHAR");
+        fieldMapping.put("userName", "VARCHAR");
+
+        return this.indexMapping(indexName, fieldMapping);
+    }
+
 
     /**
      * Create index with a certain name.
@@ -268,6 +353,21 @@ public final class EasyRestHighLevelClient implements Closeable {
         return this.client.indices().delete(request, RequestOptions.DEFAULT);
 
     }
+
+    /**
+     * Existence index with a certain name.
+     *
+     * @param indexName The index name.
+     * @return Delete response.
+     * @throws IOException If something goes wrong.
+     */
+    public boolean existenceIndex(final String indexName)
+        throws IOException {
+        GetIndexRequest request = new GetIndexRequest();
+        request.indices(indexName);
+        return client.indices().exists(request, RequestOptions.DEFAULT);
+    }
+
 
     /**
      * The comprehensive search for index list.
@@ -341,17 +441,18 @@ public final class EasyRestHighLevelClient implements Closeable {
         BoolQueryBuilder advantageQuery = QueryBuilders.boolQuery();
 
         // Extra condition.
-        for (final SearchField field : condition.getSearchMethod()) {
-            QueryBuilder singleQuery = this.crateQuery(field);
+        if (condition.getSearchMethod() != null) {
+            for (final SearchField field : condition.getSearchMethod()) {
+                QueryBuilder singleQuery = this.crateQuery(field);
 
-            if (singleQuery != null) {
-                if (NOT_EQUALS.equals(field.getMethod())) {
-                    advantageQuery.mustNot().add(singleQuery);
-                } else {
-                    advantageQuery.must().add(singleQuery);
+                if (singleQuery != null) {
+                    if (NOT_EQUALS.equals(field.getMethod())) {
+                        advantageQuery.mustNot().add(singleQuery);
+                    } else {
+                        advantageQuery.must().add(singleQuery);
+                    }
                 }
             }
-
         }
 
         SearchRequest searchRequest = new SearchRequest();
@@ -360,7 +461,13 @@ public final class EasyRestHighLevelClient implements Closeable {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(advantageQuery);
         searchSourceBuilder.size(pageSize);
+        SortField sortField = condition.getSortField();
+        if (sortField != null) {
+            searchSourceBuilder.sort(sortField.getFieldName(),
+                SortOrder.valueOf(sortField.getSortType()));
+        }
         searchRequest.source(searchSourceBuilder);
+
 
         // Execute query.
         SearchHits searchHits = this.scrollSearch(searchRequest, pageNo);

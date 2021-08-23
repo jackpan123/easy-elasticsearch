@@ -21,6 +21,11 @@ public final class AdvancedSearchCondition {
     private List<SearchField> searchMethod;
 
     /**
+     * sort type.
+     */
+    private SortField sortField;
+
+    /**
      * Gets indexName.
      *
      * @return Value of indexName.
@@ -54,5 +59,23 @@ public final class AdvancedSearchCondition {
      */
     public void setSearchMethod(final List<SearchField> searchMethod) {
         this.searchMethod = searchMethod;
+    }
+
+    /**
+     * Gets sortField.
+     *
+     * @return Value of sortField.
+     */
+    public SortField getSortField() {
+        return this.sortField;
+    }
+
+    /**
+     * Sets sortField.
+     *
+     * @param sortField Simple param.
+     */
+    public void setSortField(SortField sortField) {
+        this.sortField = sortField;
     }
 }
