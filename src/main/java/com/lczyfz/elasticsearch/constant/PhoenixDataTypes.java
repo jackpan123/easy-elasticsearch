@@ -1,5 +1,6 @@
 package com.lczyfz.elasticsearch.constant;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,7 +10,7 @@ import java.util.Set;
  * @author Jack Pan
  * @version 1.00 2020-09-24
  */
-public final class PhoenixDataTypes {
+public final class PhoenixDataTypes implements Serializable {
 
     /**
      * The numeric type set.

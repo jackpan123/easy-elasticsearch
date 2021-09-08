@@ -1,12 +1,14 @@
 package com.lczyfz.elasticsearch.entity;
 
+import java.io.Serializable;
+
 /**
  * The search field for advantage.
  *
  * @author Jack Pan
  * @version 2020-09
  */
-public final class SearchField {
+public final class SearchField implements Serializable {
 
     /**
      * The field name.

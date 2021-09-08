@@ -1,5 +1,6 @@
 package com.lczyfz.elasticsearch.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -8,7 +9,7 @@ import java.util.List;
  * @author Jack Pan
  * @version 1.00
  */
-public final class AdvancedSearchCondition {
+public final class AdvancedSearchCondition implements Serializable {
 
     /**
      * The index name.

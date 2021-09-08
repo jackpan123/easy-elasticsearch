@@ -1,10 +1,12 @@
 package com.lczyfz.elasticsearch.entity;
 
+import java.io.Serializable;
+
 /**
  * @author jackpan
  * @version v1.0 2021/8/23 11:38
  */
-public class SortField {
+public class SortField implements Serializable {
 
     /**
      * The field name.

@@ -1,12 +1,14 @@
 package com.lczyfz.elasticsearch.constant;
 
+import java.io.Serializable;
+
 /**
  * The match method class.
  *
  * @author Jack Pan
  * @version 1.0 2020-09-27
  */
-public final class MatchMethod {
+public final class MatchMethod implements Serializable {
 
     /**
      * Hide constructor.
